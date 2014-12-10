@@ -6,43 +6,44 @@ import br.com.caelum.agiletickets.models.Sessao;
 import br.com.caelum.agiletickets.models.TipoDeEspetaculo;
 
 public class CalculadoraDePrecos {
+	
+	private static final double PERCENTUAL_NAO_RESERVADO_CINEMA_SHOW=0.05;
+	private static final double PERCENTUAL_NAO_RESERVADO_BALLET_ORQUESTRA=0.50;
+	private static final double PERCENTUAL_REAJUSTE_CINEMA_SHOW=0.10;
+	private static final double PERCENTUAL_REAJUSTE_BALLET_ORQUESTRA=0.20;
+	private static final double PERCENTUAL_REAJUSTE_DURACAO=0.10;
 
 	public static BigDecimal calcula(Sessao sessao, Integer quantidade) {
 		BigDecimal preco;
+		switch(sessao.getEspetaculo().getTipo()){
+			case CINEMA:
+			case SHOW:
+				//quando estiverem acabando os ingressos... 
+				preco=aplicarAjustePreco(sessao,PERCENTUAL_NAO_RESERVADO_CINEMA_SHOW,PERCENTUAL_REAJUSTE_CINEMA_SHOW);
+				break;
+			case BALLET:
+			case ORQUESTRA:
+				preco=aplicarAjustePreco(sessao,PERCENTUAL_NAO_RESERVADO_BALLET_ORQUESTRA,PERCENTUAL_REAJUSTE_BALLET_ORQUESTRA);
+				
+				if(sessao.getDuracaoEmMinutos() > 60){
+					preco = preco.add(sessao.getPreco().multiply(BigDecimal.valueOf(PERCENTUAL_REAJUSTE_DURACAO)));
+				}
+				break;
+			default:
+				//nao aplica aumento para teatro (quem vai é pobretão)
+				preco = sessao.getPreco();
+			}
 		
-		if(sessao.getEspetaculo().getTipo().equals(TipoDeEspetaculo.CINEMA) || sessao.getEspetaculo().getTipo().equals(TipoDeEspetaculo.SHOW)) {
-			//quando estiverem acabando os ingressos... 
-			if((sessao.getTotalIngressos() - sessao.getIngressosReservados()) / sessao.getTotalIngressos().doubleValue() <= 0.05) { 
-				preco = sessao.getPreco().add(sessao.getPreco().multiply(BigDecimal.valueOf(0.10)));
-			} else {
-				preco = sessao.getPreco();
-			}
-		} else if(sessao.getEspetaculo().getTipo().equals(TipoDeEspetaculo.BALLET)) {
-			if((sessao.getTotalIngressos() - sessao.getIngressosReservados()) / sessao.getTotalIngressos().doubleValue() <= 0.50) { 
-				preco = sessao.getPreco().add(sessao.getPreco().multiply(BigDecimal.valueOf(0.20)));
-			} else {
-				preco = sessao.getPreco();
-			}
-			
-			if(sessao.getDuracaoEmMinutos() > 60){
-				preco = preco.add(sessao.getPreco().multiply(BigDecimal.valueOf(0.10)));
-			}
-		} else if(sessao.getEspetaculo().getTipo().equals(TipoDeEspetaculo.ORQUESTRA)) {
-			if((sessao.getTotalIngressos() - sessao.getIngressosReservados()) / sessao.getTotalIngressos().doubleValue() <= 0.50) { 
-				preco = sessao.getPreco().add(sessao.getPreco().multiply(BigDecimal.valueOf(0.20)));
-			} else {
-				preco = sessao.getPreco();
-			}
-
-			if(sessao.getDuracaoEmMinutos() > 60){
-				preco = preco.add(sessao.getPreco().multiply(BigDecimal.valueOf(0.10)));
-			}
-		}  else {
-			//nao aplica aumento para teatro (quem vai é pobretão)
-			preco = sessao.getPreco();
-		} 
-
 		return preco.multiply(BigDecimal.valueOf(quantidade));
+		
+	}
+	
+	private static BigDecimal aplicarAjustePreco(Sessao sessao, double percentualNaoReservado, double percentualReajuste) {
+		if(sessao.getPercentualReservado() <= percentualNaoReservado) { 
+			return sessao.getPreco().add(sessao.getPreco().multiply(BigDecimal.valueOf(percentualReajuste)));
+		} else {
+			return sessao.getPreco();
+		}
 	}
 
 }
