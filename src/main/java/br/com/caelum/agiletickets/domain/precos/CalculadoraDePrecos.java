@@ -30,7 +30,6 @@ public class CalculadoraDePrecos {
 				}
 				break;
 			default:
-				//nao aplica aumento para teatro (quem vai é pobretão)
 				preco = sessao.getPreco();
 			}
 		
