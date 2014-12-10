@@ -38,4 +38,13 @@ public class SessaoTest {
 		Assert.assertEquals(2, sessao.getIngressosDisponiveis().intValue());
 	}
 	
+	@Test
+	public void reservarIngressosDeveDiminuirTodosIngressosDisponiveis() throws Exception {
+		Sessao sessao = new Sessao();
+		sessao.setTotalIngressos(5);
+
+		sessao.reserva(5);
+		Assert.assertEquals(0, sessao.getIngressosDisponiveis().intValue());
+	}
+	
 }
